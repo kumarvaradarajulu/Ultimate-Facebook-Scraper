@@ -11,6 +11,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from config import check_config, is_enabled
 
 # -------------------------------------------------------------
 # -------------------------------------------------------------
@@ -21,8 +22,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 driver = None
 
 # whether to download photos or not
-download_uploaded_photos = True
-download_friends_photos = True
+download_uploaded_photos = is_enabled("download.uploaded_photo")
+download_friends_photos = is_enabled("download.friends_photo")
 
 # whether to download the full image or its thumbnail (small size)
 # if small size is True then it will be very quick else if its false then it will open each photo to download it
@@ -173,6 +174,13 @@ def get_div_links(x, tag):
         return temp.find_element_by_tag_name(tag)
     except Exception:
         return ""
+
+
+def get_intro(x):
+    """ Get items from Intro section """
+    sections = x.find_elements_by_css_selector("div#u_ps_fetchstream_8_1_1 ul li div.textContent div")
+    for section in sections:
+        print(section)
 
 
 def get_title_links(title):
@@ -360,6 +368,7 @@ def save_to_file(name, elements, status, current_section):
 
         # dealing with Friends
         if status == 0:
+            import ipdb; ipdb.set_trace()
             # get profile links of friends
             results = [x.get_attribute("href") for x in elements]
             results = [create_original_link(x) for x in results]
@@ -369,7 +378,7 @@ def save_to_file(name, elements, status, current_section):
                 x.find_element_by_tag_name("img").get_attribute("aria-label")
                 for x in elements
             ]
-
+            friend_intro_scraped = False
             # download friends' photos
             try:
                 if download_friends_photos:
@@ -380,6 +389,7 @@ def save_to_file(name, elements, status, current_section):
                         ]
                     else:
                         links = []
+                        friend_intro_scraped = True
                         for friend in results:
                             try:
                                 driver.get(friend)
@@ -391,6 +401,9 @@ def save_to_file(name, elements, status, current_section):
                                 l = driver.find_element_by_class_name(
                                     "profilePicThumb"
                                 ).get_attribute("href")
+                                import ipdb; ipdb.set_trace()
+                                if is_enabled("scrape.friend_intro.get"):
+                                    get_intro(driver)
                             except Exception:
                                 l = "None"
 
@@ -402,7 +415,7 @@ def save_to_file(name, elements, status, current_section):
                             elif links[i].find("picture/view") != -1:
                                 links[i] = "None"
 
-                        img_links = get_facebook_images_url(links)
+                        img_links = get_facebook_images_url(links)                        
 
                     folder_names = [
                         "Friend's Photos",
@@ -421,6 +434,23 @@ def save_to_file(name, elements, status, current_section):
                     )
                 else:
                     img_names = ["None"] * len(results)
+
+                # TODO: we may end up executing this twice if both download friend photos and intro is enabled
+                # TODO: Need to find a way to avoid it
+
+                if not friend_intro_scraped and is_enabled("scrape.friend_intro.get"):
+                    for friend in results:
+                        try:
+                            driver.get(friend)
+                            WebDriverWait(driver, 30).until(
+                                EC.presence_of_element_located(
+                                    (By.CLASS_NAME, "profilePicThumb")
+                                )
+                            )
+                            get_intro(driver)
+                        except Exception:
+                            l = "None"
+
             except Exception:
                 print(
                     "Exception (Images)",
@@ -533,7 +563,7 @@ def save_to_file(name, elements, status, current_section):
 # ----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-
+@check_config
 def scrape_data(user_id, scan_list, section, elements_path, save_status, file_names):
     """Given some parameters, this function can scrap friends/photos/videos/about/posts(statuses) of a profile"""
     page = []
@@ -684,7 +714,6 @@ def scrap_profile(ids):
         print("Friends Done!")
 
         # ----------------------------------------------------------------------------
-
         print("----------------------------------------")
         print("Photos..")
         print("Scraping Links..")

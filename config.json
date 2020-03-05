@@ -1,0 +1,23 @@
+{
+  "crawl": {
+    "friends": true,
+    "photos": false,
+    "videos": false,
+    "about": false,
+    "posts": false
+  },
+  "log": {
+    "file": "",
+    "redirect_to_file": true
+  },
+  "download": {
+    "friends_photo": false,
+    "uploaded_photo": false
+  },
+  "scrape": {
+    "friend_intro": {
+      "get": true
+    }
+  },
+  "test": [true, false]
+}
