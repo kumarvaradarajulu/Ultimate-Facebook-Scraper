@@ -1,8 +1,11 @@
 import calendar
 import os
 import platform
+import random
 import sys
+import time
 import urllib.request
+
 import yaml
 
 from selenium import webdriver
@@ -178,9 +181,9 @@ def get_div_links(x, tag):
 
 def get_intro(x):
     """ Get items from Intro section """
-    sections = x.find_elements_by_css_selector("div#u_ps_fetchstream_8_1_1 ul li div.textContent div")
-    for section in sections:
-        print(section)
+    sections = x.find_elements_by_css_selector("div#intro_container_id ul li div.textContent>div")
+    time.sleep(random.randint(1, 13))
+    return [section.text for section in sections]
 
 
 def get_title_links(title):
@@ -365,10 +368,10 @@ def save_to_file(name, elements, status, current_section):
 
         results = []
         img_names = []
+        intros = []
 
         # dealing with Friends
         if status == 0:
-            import ipdb; ipdb.set_trace()
             # get profile links of friends
             results = [x.get_attribute("href") for x in elements]
             results = [create_original_link(x) for x in results]
@@ -401,9 +404,8 @@ def save_to_file(name, elements, status, current_section):
                                 l = driver.find_element_by_class_name(
                                     "profilePicThumb"
                                 ).get_attribute("href")
-                                import ipdb; ipdb.set_trace()
                                 if is_enabled("scrape.friend_intro.get"):
-                                    get_intro(driver)
+                                    intros.append(get_intro(driver))
                             except Exception:
                                 l = "None"
 
@@ -447,7 +449,7 @@ def save_to_file(name, elements, status, current_section):
                                     (By.CLASS_NAME, "profilePicThumb")
                                 )
                             )
-                            get_intro(driver)
+                            intros.append(get_intro(driver))
                         except Exception:
                             l = "None"
 
@@ -527,15 +529,24 @@ def save_to_file(name, elements, status, current_section):
         if status == 0:
             for i, _ in enumerate(results):
                 # friend's profile link
-                f.writelines(results[i])
-                f.write(",")
+                if results[i]:
+                    f.writelines(results[i])
+                    f.write(";")
 
                 # friend's name
-                f.writelines(people_names[i])
-                f.write(",")
+                if people_names[i]:
+                    f.writelines(people_names[i])
+                    f.write(";")
 
-                # friend's downloaded picture id
-                f.writelines(img_names[i])
+                # friend's intro details
+                if intros[i]:
+                    f.writelines(";".join(intros[i]))
+                    f.write(";")
+
+                if download_friends_photos:
+                    # friend's downloaded picture id
+                    f.writelines(img_names[i])
+
                 f.write("\n")
 
         elif status == 1:

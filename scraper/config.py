@@ -2,6 +2,7 @@
 Module that processes config.json and creates a config object
 """
 import json
+import os
 from collections import namedtuple
 
 
@@ -16,7 +17,8 @@ scan_list = {
 
 class Config:
     def __init__(self):
-        with open("config.json") as f:
+        config_file = "config.json" if os.path.isfile("config.json") else "../config.json"
+        with open(config_file) as f:
             self.config = json.loads(f.read(), object_hook=lambda d: namedtuple("DataConfig", d.keys())(*d.values()))
 
     def __getattr__(self, item):
@@ -32,7 +34,7 @@ class Config:
 
             start += 1
 
-            return multi_level_get_from_config(pieces[start:], getattr(config, pieces[0], None), start)
+            return multi_level_get_from_config(config_pieces[start:], getattr(config, pieces[0], None), start)
 
         config_value = multi_level_get_from_config(config_pieces, self.config, 0)
 
@@ -58,3 +60,7 @@ def check_config(func):
 def is_enabled(config_path):
     """ Decorator to get check if config is enabled """
     return getattr(config, config_path, True)
+
+
+if __name__ == "__main__":
+    print(getattr(config, "scrape.friend_intro.get", None))
