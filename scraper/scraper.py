@@ -2,6 +2,8 @@ import calendar
 import os
 import platform
 import random
+import shutil
+import subprocess
 import sys
 import time
 import urllib.request
@@ -41,7 +43,6 @@ scroll_time = 8
 old_height = 0
 firefox_profile_path = "/home/zeryx/.mozilla/firefox/0n8gmjoz.bot"
 facebook_https_prefix = "https://"
-
 
 CHROMEDRIVER_BINARIES_FOLDER = "bin"
 
@@ -212,10 +213,10 @@ def get_time(x):
     try:
         time = x.find_element_by_tag_name("abbr").get_attribute("title")
         time = (
-            str("%02d" % int(time.split(", ")[1].split()[1]),)
-            + "-"
-            + str(
-                (
+                str("%02d" % int(time.split(", ")[1].split()[1]), )
+                + "-"
+                + str(
+            (
                     "%02d"
                     % (
                         int(
@@ -226,14 +227,14 @@ def get_time(x):
                             )
                         ),
                     )
-                )
             )
-            + "-"
-            + time.split()[3]
-            + " "
-            + str("%02d" % int(time.split()[5].split(":")[0]))
-            + ":"
-            + str(time.split()[5].split(":")[1])
+        )
+                + "-"
+                + time.split()[3]
+                + " "
+                + str("%02d" % int(time.split()[5].split(":")[0]))
+                + ":"
+                + str(time.split()[5].split(":")[1])
         )
     except Exception:
         pass
@@ -269,13 +270,13 @@ def extract_and_write_posts(elements, filename):
 
                 status = get_status(x)
                 if (
-                    title.text
-                    == driver.find_element_by_id("fb-timeline-cover-name").text
+                        title.text
+                        == driver.find_element_by_id("fb-timeline-cover-name").text
                 ):
                     if status == "":
                         temp = get_div_links(x, "img")
                         if (
-                            temp == ""
+                                temp == ""
                         ):  # no image tag which means . it is not a life event
                             link = get_div_links(x, "a").get_attribute("href")
                             type = "status update without text"
@@ -301,13 +302,13 @@ def extract_and_write_posts(elements, filename):
                         status = get_div_links(x, "a").text
 
                 elif (
-                    title.text.find(" added ") != -1 and title.text.find("photo") != -1
+                        title.text.find(" added ") != -1 and title.text.find("photo") != -1
                 ):
                     type = "added photo"
                     link = get_div_links(x, "a").get_attribute("href")
 
                 elif (
-                    title.text.find(" added ") != -1 and title.text.find("video") != -1
+                        title.text.find(" added ") != -1 and title.text.find("video") != -1
                 ):
                     type = "added video"
                     link = get_div_links(x, "a").get_attribute("href")
@@ -322,16 +323,16 @@ def extract_and_write_posts(elements, filename):
                 title = title.replace("\n", " ")
 
                 line = (
-                    str(time)
-                    + " || "
-                    + str(type)
-                    + " || "
-                    + str(title)
-                    + " || "
-                    + str(status)
-                    + " || "
-                    + str(link)
-                    + "\n"
+                        str(time)
+                        + " || "
+                        + str(type)
+                        + " || "
+                        + str(title)
+                        + " || "
+                        + str(status)
+                        + " || "
+                        + str(link)
+                        + "\n"
                 )
 
                 try:
@@ -417,7 +418,7 @@ def save_to_file(name, elements, status, current_section):
                             elif links[i].find("picture/view") != -1:
                                 links[i] = "None"
 
-                        img_links = get_facebook_images_url(links)                        
+                        img_links = get_facebook_images_url(links)
 
                     folder_names = [
                         "Friend's Photos",
@@ -589,7 +590,7 @@ def scrape_data(user_id, scan_list, section, elements_path, save_status, file_na
             driver.get(page[i])
 
             if (
-                (save_status == 0) or (save_status == 1) or (save_status == 2)
+                    (save_status == 0) or (save_status == 1) or (save_status == 2)
             ):  # Only run this for friends, photos and videos
 
                 # the bar which contains all the sections
@@ -630,15 +631,15 @@ def create_original_link(url):
 
     elif url.find("fnr_t") != -1:
         original_link = (
-            facebook_https_prefix
-            + ".facebook.com/"
-            + ((url.split("/"))[-1].split("?")[0])
+                facebook_https_prefix
+                + ".facebook.com/"
+                + ((url.split("/"))[-1].split("?")[0])
         )
     elif url.find("_tab") != -1:
         original_link = (
-            facebook_https_prefix
-            + ".facebook.com/"
-            + (url.split("?")[0]).split("/")[-1]
+                facebook_https_prefix
+                + ".facebook.com/"
+                + (url.split("?")[0]).split("/")[-1]
         )
     else:
         original_link = url
@@ -745,8 +746,8 @@ def scrap_profile(ids):
         scan_list = ["'s Videos", "Videos of"]
         section = ["/videos_by", "/videos_of"]
         elements_path = [
-            "//*[contains(@id, 'pagelet_timeline_app_collection_')]/ul"
-        ] * 2
+                            "//*[contains(@id, 'pagelet_timeline_app_collection_')]/ul"
+                        ] * 2
         file_names = ["Uploaded Videos.txt", "Tagged Videos.txt"]
         save_status = 2
 
@@ -768,8 +769,8 @@ def scrap_profile(ids):
             "/about?section=year-overviews",
         ]
         elements_path = [
-            "//*[contains(@id, 'pagelet_timeline_app_collection_')]/ul/li/div/div[2]/div/div"
-        ] * 7
+                            "//*[contains(@id, 'pagelet_timeline_app_collection_')]/ul/li/div/div[2]/div/div"
+                        ] * 7
         file_names = [
             "Overview.txt",
             "Work and Education.txt",
@@ -894,6 +895,23 @@ def login(email, password):
         exit(1)
 
 
+def connect_vpn(disconnect=False):
+    program_files_path = os.path.join("c:", os.path.sep, "Program Files (x86)", "NordVPN", "NordVPN.exe")
+    program_files_path_x64 = os.path.join("c:", os.path.sep, "Program Files", "NordVPN", "NordVPN.exe")
+    if os.path.isfile(program_files_path):
+        exe = program_files_path
+        print(f"\nVPN installation exists in={program_files_path}")
+    elif os.path.isfile(program_files_path_x64):
+        exe = program_files_path_x64
+        print(f"\nVPN installation exists in={program_files_path_x64}")
+    else:
+        print("\nNo VPN installation exists, Please install NordVPN")
+        return
+    print("VPN {}".format("Connecting..." if not disconnect else "Disconnecting..."))
+    subprocess.run([exe, "-c" if not disconnect else "-d"])
+    time.sleep(15)
+
+
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
@@ -913,10 +931,11 @@ def scrapper(**kwargs):
 
     if len(ids) > 0:
         print("\nStarting Scraping...")
-
+        connect_vpn()
         login(cfg["email"], cfg["password"])
         scrap_profile(ids)
         driver.close()
+        connect_vpn(disconnect=True)
     else:
         print("Input file is empty.")
 
@@ -927,4 +946,5 @@ def scrapper(**kwargs):
 
 if __name__ == "__main__":
     # get things rolling
+    connect_vpn()
     scrapper()
