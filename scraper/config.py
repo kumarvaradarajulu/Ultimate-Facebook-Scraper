@@ -22,7 +22,6 @@ class Config:
             self.config = json.loads(f.read(), object_hook=lambda d: namedtuple("DataConfig", d.keys())(*d.values()))
 
     def __getattr__(self, item):
-        # See if the pieces of config uis being asked
         config_pieces = item.split(".")
 
         def multi_level_get_from_config(pieces, config, start):
@@ -58,9 +57,15 @@ def check_config(func):
 
 
 def is_enabled(config_path):
-    """ Decorator to get check if config is enabled """
+    """ Function to check if config is enabled """
     return getattr(config, config_path, True)
 
 
+def get_config(config_path):
+    """ Function to get config from a config path """
+    return getattr(config, config_path, None)
+
+
 if __name__ == "__main__":
+    config = Config()
     print(getattr(config, "scrape.friend_intro.get", None))

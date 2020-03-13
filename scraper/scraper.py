@@ -6,16 +6,18 @@ import subprocess
 import sys
 import time
 import urllib.request
+import datetime
 
 import yaml
 
+from lsm import LSM
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from config import check_config, is_enabled
+from config import check_config, is_enabled, get_config
 
 # -------------------------------------------------------------
 # -------------------------------------------------------------
@@ -347,6 +349,21 @@ def extract_and_write_posts(elements, filename):
     return
 
 
+def is_profile_visited(profile_link):
+    """ Function to check if profile link is already visited """
+    skip_visited = get_config("scrape.friend_intro.skip_visited")
+    if skip_visited:
+        db = LSM("visited_profiles.ldb")
+        visited = profile_link in db
+        if visited:
+            return visited
+
+        db[profile_link] = datetime.datetime.now()
+        return False
+
+    return True
+
+
 # -------------------------------------------------------------
 # -------------------------------------------------------------
 
@@ -364,11 +381,15 @@ def save_to_file(name, elements, status, current_section):
         f = None  # file pointer
 
         if status != 4:
-            f = open(name, "w", encoding="utf-8", newline="\r\n")
+            if get_config("scrape.output.type") == "per_run":
+                f = open(name, "w", encoding="utf-8", newline="\r\n")
+            else:
+                f = open(name, "w", encoding="utf-8", newline="\r\n")
 
         results = []
         img_names = []
         intros = []
+        summary = []
 
         # dealing with Friends
         if status == 0:
@@ -441,18 +462,22 @@ def save_to_file(name, elements, status, current_section):
                 # TODO: Need to find a way to avoid it
 
                 if not friend_intro_scraped and is_enabled("scrape.friend_intro.get"):
-                    for friend in results:
-                        try:
-                            driver.get(friend)
-                            WebDriverWait(driver, 30).until(
-                                EC.presence_of_element_located(
-                                    (By.CLASS_NAME, "profilePicThumb")
+                    if not is_enabled("scrape.friend_intro.summary"):
+                        for friend in results:
+                            try:
+                                driver.get(friend)
+                                WebDriverWait(driver, 30).until(
+                                    EC.presence_of_element_located(
+                                        (By.CLASS_NAME, "profilePicThumb")
+                                    )
                                 )
-                            )
-                            intros.append(get_intro(driver))
-                        except Exception:
-                            l = "None"
-
+                                intros.append(get_intro(driver))
+                            except Exception:
+                                l = "None"
+                    else:
+                        for x in elements:
+                            data = x.find_element_by_xpath(".//following-sibling::div//li/span")
+                            summary.append(data.text if data else "")
             except Exception:
                 print(
                     "Exception (Images)",
@@ -528,6 +553,10 @@ def save_to_file(name, elements, status, current_section):
         """Write results to file"""
         if status == 0:
             for i, _ in enumerate(results):
+                if is_enabled("scrape.friend_intro.skip_visited") and is_profile_visited(results[i]):
+                    # Profiles that are already visited are not written to the file.
+                    continue
+
                 # friend's profile link
                 if results[i]:
                     f.writelines(results[i])
@@ -539,9 +568,15 @@ def save_to_file(name, elements, status, current_section):
                     f.write(";")
 
                 # friend's intro details
-                if intros[i]:
-                    f.writelines(";".join(intros[i]))
-                    f.write(";")
+                if not is_enabled("scrape.friend_intro.summary"):
+                    if intros[i]:
+                        f.writelines(";".join(intros[i]))
+                        f.write(";")
+
+                if is_enabled("scrape.friend_intro.summary"):
+                    if summary[i]:
+                        f.writelines(summary[i])
+                        f.write(";")
 
                 if download_friends_photos:
                     # friend's downloaded picture id
@@ -565,7 +600,7 @@ def save_to_file(name, elements, status, current_section):
 
         f.close()
 
-    except Exception:
+    except Exception as e:
         print("Exception (save_to_file)", "Status =", str(status), sys.exc_info()[0])
 
     return
@@ -666,14 +701,15 @@ def scrap_profile(ids):
         user_id = create_original_link(url)
 
         print("\nScraping:", user_id)
-
-        try:
-            target_dir = os.path.join(folder, user_id.split("/")[-1])
-            create_folder(target_dir)
-            os.chdir(target_dir)
-        except Exception:
-            print("Some error occurred in creating the profile directory.")
-            continue
+        print("output_type", get_config("scrape.output.type"))
+        if not get_config("scrape.output.type") in ("per_run", ):
+            try:
+                target_dir = os.path.join(folder, user_id.split("/")[-1])
+                create_folder(target_dir)
+                os.chdir(target_dir)
+            except Exception:
+                print("Some error occurred in creating the profile directory.")
+                continue
 
         # ----------------------------------------------------------------------------
         print("----------------------------------------")

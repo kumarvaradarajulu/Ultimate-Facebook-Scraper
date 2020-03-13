@@ -16,7 +16,12 @@
   },
   "scrape": {
     "friend_intro": {
-      "get": true
+      "get": true,
+      "summary": true,
+      "skip_visited": true
+    },
+    "output": {
+      "type": "per_run"
     }
   },
   "test": [true, false]
