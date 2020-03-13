@@ -2,7 +2,6 @@ import calendar
 import os
 import platform
 import random
-import shutil
 import subprocess
 import sys
 import time
@@ -681,54 +680,54 @@ def scrap_profile(ids):
         print("Friends..")
         # setting parameters for scrape_data() to scrape friends
         scan_list = [
-            "All",
-            "Mutual Friends",
-            "Following",
-            "Followers",
-            "Work",
-            "College",
+            # "All",
+            # "Mutual Friends",
+            # "Following",
+            # "Followers",
+            # "Work",
+            # "College",
             "Current City",
-            "Hometown",
+            # "Hometown",
         ]
         section = [
-            "/friends",
-            "/friends_mutual",
-            "/following",
-            "/followers",
-            "/friends_work",
-            "/friends_college",
+            # "/friends",
+            # "/friends_mutual",
+            # "/following",
+            # "/followers",
+            # "/friends_work",
+            # "/friends_college",
             "/friends_current_city",
-            "/friends_hometown",
+            # "/friends_hometown",
         ]
         elements_path = [
+            # "//*[contains(@id,'pagelet_timeline_medley_friends')][1]/div[2]/div/ul/li/div/a",
+            # "//*[contains(@id,'pagelet_timeline_medley_friends')][1]/div[2]/div/ul/li/div/a",
+            # "//*[contains(@class,'_3i9')][1]/div/div/ul/li[1]/div[2]/div/div/div/div/div[2]/ul/li/div/a",
+            # "//*[contains(@class,'fbProfileBrowserListItem')]/div/a",
+            # "//*[contains(@id,'pagelet_timeline_medley_friends')][1]/div[2]/div/ul/li/div/a",
+            # "//*[contains(@id,'pagelet_timeline_medley_friends')][1]/div[2]/div/ul/li/div/a",
             "//*[contains(@id,'pagelet_timeline_medley_friends')][1]/div[2]/div/ul/li/div/a",
-            "//*[contains(@id,'pagelet_timeline_medley_friends')][1]/div[2]/div/ul/li/div/a",
-            "//*[contains(@class,'_3i9')][1]/div/div/ul/li[1]/div[2]/div/div/div/div/div[2]/ul/li/div/a",
-            "//*[contains(@class,'fbProfileBrowserListItem')]/div/a",
-            "//*[contains(@id,'pagelet_timeline_medley_friends')][1]/div[2]/div/ul/li/div/a",
-            "//*[contains(@id,'pagelet_timeline_medley_friends')][1]/div[2]/div/ul/li/div/a",
-            "//*[contains(@id,'pagelet_timeline_medley_friends')][1]/div[2]/div/ul/li/div/a",
-            "//*[contains(@id,'pagelet_timeline_medley_friends')][1]/div[2]/div/ul/li/div/a",
+            # "//*[contains(@id,'pagelet_timeline_medley_friends')][1]/div[2]/div/ul/li/div/a",
         ]
         file_names = [
-            "All Friends.txt",
-            "Mutual Friends.txt",
-            "Following.txt",
-            "Followers.txt",
-            "Work Friends.txt",
-            "College Friends.txt",
+            # "All Friends.txt",
+            # "Mutual Friends.txt",
+            # "Following.txt",
+            # "Followers.txt",
+            # "Work Friends.txt",
+            # "College Friends.txt",
             "Current City Friends.txt",
-            "Hometown Friends.txt",
+            # "Hometown Friends.txt",
         ]
         save_status = 0
 
         scrape_data(user_id, scan_list, section, elements_path, save_status, file_names)
-        print("Friends Done!")
+        print("Done scraping Friends!")
 
         # ----------------------------------------------------------------------------
-        print("----------------------------------------")
-        print("Photos..")
-        print("Scraping Links..")
+        # print("----------------------------------------")
+        # print("Photos..")
+        # print("Scraping Links..")
         # setting parameters for scrape_data() to scrap photos
         scan_list = ["'s Photos", "Photos of"]
         section = ["/photos_all", "/photos_of"]
@@ -737,11 +736,11 @@ def scrap_profile(ids):
         save_status = 1
 
         scrape_data(user_id, scan_list, section, elements_path, save_status, file_names)
-        print("Photos Done!")
+        # print("Photos Done!")
 
         # ----------------------------------------------------------------------------
-        print("----------------------------------------")
-        print("Videos:")
+        # print("----------------------------------------")
+        # print("Videos:")
         # setting parameters for scrape_data() to scrap videos
         scan_list = ["'s Videos", "Videos of"]
         section = ["/videos_by", "/videos_of"]
@@ -752,11 +751,11 @@ def scrap_profile(ids):
         save_status = 2
 
         scrape_data(user_id, scan_list, section, elements_path, save_status, file_names)
-        print("Videos Done!")
+        # print("Videos Done!")
         # ----------------------------------------------------------------------------
 
-        print("----------------------------------------")
-        print("About:")
+        # print("----------------------------------------")
+        # print("About:")
         # setting parameters for scrape_data() to scrap the about section
         scan_list = [None] * 7
         section = [
@@ -783,11 +782,11 @@ def scrap_profile(ids):
         save_status = 3
 
         scrape_data(user_id, scan_list, section, elements_path, save_status, file_names)
-        print("About Section Done!")
+        # print("About Section Done!")
 
         # ----------------------------------------------------------------------------
-        print("----------------------------------------")
-        print("Posts:")
+        # print("----------------------------------------")
+        # print("Posts:")
         # setting parameters for scrape_data() to scrap posts
         scan_list = [None]
         section = []
@@ -797,8 +796,8 @@ def scrap_profile(ids):
         save_status = 4
 
         scrape_data(user_id, scan_list, section, elements_path, save_status, file_names)
-        print("Posts(Statuses) Done!")
-        print("----------------------------------------")
+        # print("Posts(Statuses) Done!")
+        # print("----------------------------------------")
     # ----------------------------------------------------------------------------
 
     print("\nProcess Completed.")
